@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>Typeahead</title>
+    <title>Mouse Tracker</title>
 </head>
 
 <body>
@@ -14,100 +14,98 @@
         body {
             margin: 0;
             padding: 0;
-            font-family: 'Courier New', Courier, monospace
+            background: #222;
+            font-family: cursive
         }
 
-        .input-container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            width: 200px;
-            position: relative
-        }
-
-        .container {
-            width: 100vw;
-            display: flex;
-            justify-content: space-evenly;
-            flex-direction: column;
-            align-items: center;
-        }
-
-        #list {
-            list-style: none;
-            margin: 4px auto 10px auto;
-            position: absolute;
-            top: 25px;
-            left: 15%;
-            padding: 4px;
-            background-color: #fff;
-            border: 1px solid rgba(0, 0, 0, 0.2);
-            border-radius: 4px;
-            box-shadow: 0 5px 10px rgba(0, 0, 0, .2);
-        }
-
-        li:hover {
-            background: darkslategray;
-            color: white;
-            cursor: pointer;
-            transition: all .5s;
-        }
-
-        .selected-container {
+        #wrap {
             width: 100%;
-            display: flex;
-            flex-wrap: wrap;
-        }
-
-        .card-container {
-            height: 250px;
-            width: 200px;
-            border: 1px solid black;
-            border-radius: 5px;
+            height: 100vh;
+            position: relative;
+            overflow: hidden;
             display: flex;
             align-items: center;
             justify-content: center;
-            flex-direction: column;
+        }
+
+        #wrap * {
+            pointer-events: none;
+        }
+
+        #wrap h1 {
+            color: rgba(255, 255, 255, .5);
+            font-size: 5rem;
+            text-transform: uppercase;
             text-align: center;
-            margin: 10px;
+        }
+
+        .ball {
+            position: absolute;
+            border-radius: 50%;
+            animation: shrink 1s ease-in-out both;
+            opacity: .5;
+        }
+
+        @keyframes shrink {
+            100% {
+                transform: scale(0)
+            }
         }
     </style>
-
-    <div class="container">
-        <h1>Try Typing...</h1>
-        <div class="input-container">
-            <input type="text">
-            <ul id="list"></ul>
-        </div>
+    <div id="wrap">
+        <h1>Mouse Tracker</h1>
     </div>
-
 </body>
 
 <script>
-    const characters = [];
-const list = document.getElementById('list');
-const search = document.querySelector('input');
+    const mousePosition = { x: 0, y: 0 };
+let drawId;
 
-fetch('https://www.swapi.co/api/people')
-    .then(response => response.json())
-    .then(response => characters.push(...response.results))
+const getRandomNumber = function(min, max) {
+  return Math.round(Math.random() * (max - min + 1)) + min;
+};
 
-function filterText() {
-    const filtered = characters
-        .filter(val => val.name.toLowerCase().includes(this.value.toLowerCase()))
-        .map(val => `<li>${val.name}</li>`)
+window.addEventListener('mousemove', function(e) {
+  mousePosition.x = e.pageX;
+  mousePosition.y = e.pageY;
+});
 
-    if (filtered.length) {
-        render(filtered)
-    }
+function draw() {
+  return setInterval(function() {
+    const container = document.getElementById('wrap');
+    const color = `background:rgb(${getRandomNumber(0, 255)},${getRandomNumber(
+      0,
+      255
+    )}, ${getRandomNumber(0, 255)});`;
+    const ballSize = getRandomNumber(10, 30);
+    const size = `height:${ballSize}px; width:${ballSize}px;`;
+    const left = `left:${getRandomNumber(
+      mousePosition.x - ballSize,
+      mousePosition.x
+    )}px;`;
+    const top = `top:${getRandomNumber(
+      mousePosition.y - ballSize,
+      mousePosition.y
+    )}px;`;
+    const style = `${left}${top}${color}${size}`;
+
+    const ball = document.createElement('div');
+    ball.classList.add('ball');
+    ball.style = style;
+
+    ball.addEventListener('animationend', function(e) {
+      e.target.remove();
+    });
+
+    container.appendChild(ball);
+  }, 50);
 }
-
-function render(array) {
-    const html = array.join('');
-    list.innerHTML = html;
-}
-
-search.addEventListener('keyup', filterText);
+window.addEventListener('mouseover', function() {
+  drawId = draw();
+});
+window.addEventListener('mouseout', function() {
+  clearInterval(drawId);
+});
 </script>
 
 </html>
